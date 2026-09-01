@@ -1,0 +1,101 @@
+from flask import Flask, render_template, request, redirect, url_for
+
+# ==========================================
+# YOUR CASE MANAGEMENT SYSTEM CORE LOGIC
+# ==========================================
+class CaseManagementSystem:
+    def __init__(self):
+        self.cases = []
+        self.investigations = []
+        self.interagency_collaboration = InteragencyCollaboration()
+        self.ai_relationship_analysis = AIRelationshipAnalysis()
+        self.audit_logs = []
+        self.notifications = []
+        self.administration = Administration()
+
+    def add_case(self, case):
+        if not isinstance(case, Case):
+            raise ValueError("Invalid case object.")
+        self.cases.append(case)
+        self.log_audit(f"Case '{case.description}' (ID: {case.case_id}) added successfully.")
+
+    def log_audit(self, message):
+        self.audit_logs.append(message)
+
+class InteragencyCollaboration:
+    def __init__(self):
+        self.requests = []
+
+    def add_request(self, req):
+        if not isinstance(req, Request):
+            raise ValueError("Invalid request object.")
+        self.requests.append(req)
+
+class AIRelationshipAnalysis:
+    def analyze_relationships(self):
+        pass
+
+class Administration:
+    def __init__(self):
+        self.agencies = []
+
+    def add_agency(self, agency):
+        if not isinstance(agency, Agency):
+            raise ValueError("Invalid agency object.")
+        self.agencies.append(agency)
+
+class Case:
+    def __init__(self, case_id, description):
+        self.case_id = case_id
+        self.description = description
+
+class Request:
+    def __init__(self, request_id, details):
+        self.request_id = request_id
+        self.details = details
+
+class Agency:
+    def __init__(self, agency_id, name):
+        self.agency_id = agency_id
+        self.name = name
+
+# ==========================================
+# FLASK WEB SERVER CONFIGURATION
+# ==========================================
+app = Flask(__name__)
+cms = CaseManagementSystem()  # Initialize global system state
+
+@app.route('/')
+def index():
+    return render_template('index.html', 
+                           cases=cms.cases, 
+                           agencies=cms.administration.agencies, 
+                           requests=cms.interagency_collaboration.requests,
+                           logs=cms.audit_logs)
+
+@app.route('/add_case', methods=['POST'])
+def add_case():
+    case_id = request.form.get('case_id')
+    description = request.form.get('description')
+    if case_id and description:
+        cms.add_case(Case(case_id, description))
+    return redirect(url_for('index'))
+
+@app.route('/add_agency', methods=['POST'])
+def add_agency():
+    agency_id = request.form.get('agency_id')
+    name = request.form.get('name')
+    if agency_id and name:
+        cms.administration.add_agency(Agency(agency_id, name))
+    return redirect(url_for('index'))
+
+@app.route('/add_request', methods=['POST'])
+def add_request():
+    request_id = request.form.get('request_id')
+    details = request.form.get('details')
+    if request_id and details:
+        cms.interagency_collaboration.add_request(Request(request_id, details))
+    return redirect(url_for('index'))
+
+if __name__ == '__main__':
+    app.run(debug=True)
